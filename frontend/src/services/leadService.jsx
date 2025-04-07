@@ -1,62 +1,41 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:5000",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Add token to requests if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import axios from "../utils/axios";
 
 export const getLeads = async () => {
-  try {
-    const response = await api.get("/api/leads");
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch leads" };
-  }
+  const response = await axios.get("/api/leads");
+  return response.data;
 };
 
 export const addLead = async (leadData) => {
-  try {
-    const response = await api.post("/api/leads", leadData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to add lead" };
-  }
+  const response = await axios.post("/api/leads", leadData);
+  return response.data;
 };
 
 export const updateLead = async (id, leadData) => {
   try {
-    const response = await api.patch(`/api/leads/${id}`, leadData);
+    console.log("Updating lead with data:", leadData);
+    const response = await axios.patch(`/api/leads/${id}`, leadData);
+    console.log("Update response:", response.data);
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to update lead" };
+    console.error("Error updating lead:", error);
+    throw error;
   }
 };
 
-export const deleteLead = async (id) => {
-  try {
-    const response = await api.delete(`/api/leads/${id}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to delete lead" };
-  }
+export const deleteLead = async (leadId) => {
+  const response = await axios.delete(`/api/leads/${leadId}`);
+  return response.data;
 };
 
-export const updateLeadStatus = async (id, status) => {
-  try {
-    const response = await api.patch(`/api/leads/${id}/status`, { status });
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to update lead status" };
-  }
+export const updateCallResponse = async (leadId, callData) => {
+  const response = await axios.patch(
+    `/api/leads/${leadId}/call-response`,
+    callData
+  );
+  return response.data;
+};
+
+export const getLeadStats = async () => {
+  const response = await axios.get("/api/leads/stats");
+  return response.data;
 };

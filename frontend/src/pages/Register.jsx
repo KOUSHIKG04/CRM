@@ -1,27 +1,26 @@
 import React, { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import {
-  Container,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Box,
-  Link,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    role: "telecaller",
+    role: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,6 +32,13 @@ const Register = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleRoleChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -48,9 +54,9 @@ const Register = () => {
         navigate("/telecaller");
       }
     } catch (err) {
-      setError(
+      toast.error(
         Array.isArray(err.errors)
-          ? err.errors.map((e) => e.msg).join(", ")
+          ? err.errors.map((e) => e.msg)
           : err.message || "Registration failed"
       );
     } finally {
@@ -59,87 +65,84 @@ const Register = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
-        <Typography variant="h5" component="h1" align="center" gutterBottom>
-          CRM Registration
-        </Typography>
+    <div className="mt-12 flex items-center justify-center px-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl">CRM SIGN UP</CardTitle>
+        </CardHeader>{" "}
+        <p className="text-center text-md -mt-5 font-light">
+          CHOOSE YOUR ROLE BELOW
+        </p>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Input
+                id="name"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder=" ENTER YOUR NAME"
+              />
+            </div>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+            <div>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder=" ENTER YOUR EMAIL"
+              />
+            </div>
 
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Full Name"
-            name="name"
-            required
-            fullWidth
-            margin="normal"
-            value={formData.name}
-            onChange={handleChange}
-          />
+            <div className="flex gap-2">
+              <div>
+                <Select value={formData.role} onValueChange={handleRoleChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="SELECT ROLE" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="telecaller">TELECALLER</SelectItem>
+                    <SelectItem value="admin">ADMIN</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                placeholder=" ENTER YOUR PASSWORD"
+              />
+            </div>
 
-          <TextField
-            label="Email Address"
-            name="email"
-            type="email"
-            required
-            fullWidth
-            margin="normal"
-            value={formData.email}
-            onChange={handleChange}
-          />
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <div className="flex-col gap-4 w-full flex items-center justify-center">
+                  <div className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full">
+                    <div className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"></div>
+                  </div>
+                </div>
+              ) : (
+                "REGISTER"
+              )}
+            </Button>
 
-          <TextField
-            label="Password"
-            name="password"
-            type="password"
-            required
-            fullWidth
-            margin="normal"
-            value={formData.password}
-            onChange={handleChange}
-          />
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Role</InputLabel>
-            <Select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              label="Role"
-            >
-              <MenuItem value="telecaller">Telecaller</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            size="large"
-            sx={{ mt: 2 }}
-            disabled={loading}
-          >
-            {loading ? "Registering..." : "REGISTER"}
-          </Button>
-
-          <Box sx={{ mt: 2, textAlign: "center" }}>
-            <Typography variant="body2">
+            <p className="text-sm text-center mt-2">
               Already have an account?{" "}
-              <Link component={RouterLink} to="/login">
+              <RouterLink to="/login" className="underline font-medium">
                 Sign In
-              </Link>
-            </Typography>
-          </Box>
-        </form>
-      </Paper>
-    </Container>
+              </RouterLink>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

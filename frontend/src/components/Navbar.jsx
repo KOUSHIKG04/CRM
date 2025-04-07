@@ -1,68 +1,63 @@
 import React from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Avatar,
-} from "@mui/material";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { Button } from "./ui/button";
+import toast from "react-hot-toast";
+import CRMLogo from "./Logo";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
+    try {
+      logout();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
   };
 
   return (
-    <AppBar position="static">
-      <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          CRM Solutions Inc.
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {user ? (
-            <>
-              <Box sx={{ display: "flex", alignItems: "center", mr: 2 }}>
-                <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
-                  {user.name[0].toUpperCase()}
-                </Avatar>
-                <Typography variant="body1">
-                  {user.name} ({user.role})
-                </Typography>
-              </Box>
-              <Button color="inherit" onClick={handleLogout} variant="outlined">
-                Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                color="inherit"
-                component={RouterLink}
-                to="/login"
-                sx={{ mr: 2 }}
-              >
-                Sign In
-              </Button>
-              <Button
-                color="inherit"
-                component={RouterLink}
-                to="/register"
-                variant="outlined"
-              >
-                Sign Up
-              </Button>
-            </>
-          )}
-        </Box>
-      </Toolbar>
-    </AppBar>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-2xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="text-xl font-bold text-gray-800">
+              <CRMLogo />
+            </Link>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <span className="text-gray-600 mr-10">
+                  <span className="ml-3">{user.name.toUpperCase()}</span>
+                  <span className="ml-1 font-semibold">
+                    {user.role.toUpperCase()}
+                  </span>
+                </span>
+                <Button onClick={handleLogout} className="  cursor-pointer">
+                  LOGOUT
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="secondary" className="cursor-pointer">
+                    LOGIN
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="cursor-pointer">REGISTER</Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 };
 

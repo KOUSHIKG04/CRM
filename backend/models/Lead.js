@@ -27,9 +27,30 @@ const leadSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  callResponse: {
+    type: String,
+    enum: [
+      "discussed",
+      "callback",
+      "interested",
+      "busy",
+      "rnr",
+      "switched_off",
+      null,
+    ],
+    default: null,
+  },
+  callNotes: {
+    type: String,
+    default: "",
+  },
   lastCallDate: {
     type: Date,
-    default: Date.now,
+    default: null,
+  },
+  nextCallDate: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,
