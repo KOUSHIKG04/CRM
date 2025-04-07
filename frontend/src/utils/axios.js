@@ -7,6 +7,7 @@ const instance = axios.create({
     Accept: "application/json",
   },
   withCredentials: true,
+  method: "POST", // Set default method to POST
 });
 
 // Add a request interceptor to add the auth token to requests
