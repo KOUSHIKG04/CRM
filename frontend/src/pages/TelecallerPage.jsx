@@ -154,10 +154,9 @@ const TelecallerPage = () => {
         );
         toast.success("Lead updated successfully");
       } else if (dialog.type === "status") {
-        updatedLead = await leadService.updateLeadStatus(
-          selectedLead._id,
-          formData.status
-        );
+        updatedLead = await leadService.updateLead(selectedLead._id, {
+          status: formData.status,
+        });
         setLeads((prevLeads) =>
           prevLeads.map((lead) =>
             lead._id === updatedLead._id ? updatedLead : lead
