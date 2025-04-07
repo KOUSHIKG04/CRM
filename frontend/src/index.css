@@ -9,6 +9,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Custom styles for Material-UI components */
+.MuiTypography-root {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.MuiButton-root {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.MuiInputBase-root {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.MuiTableCell-root {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.MuiCard-root {
+  font-family: 'Outfit', sans-serif !important;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -134,25 +155,4 @@
     min-width: 320px;
     min-height: 100vh;
   }
-}
-
-/* Custom styles for Material-UI components */
-.MuiTypography-root {
-  font-family: 'Outfit', sans-serif !important;
-}
-
-.MuiButton-root {
-  font-family: 'Outfit', sans-serif !important;
-}
-
-.MuiInputBase-root {
-  font-family: 'Outfit', sans-serif !important;
-}
-
-.MuiTableCell-root {
-  font-family: 'Outfit', sans-serif !important;
-}
-
-.MuiCard-root {
-  font-family: 'Outfit', sans-serif !important;
 }
