@@ -1,4 +1,5 @@
 .qodo
 node_modules
-.env 
+.env
 codealike.json
+dist
