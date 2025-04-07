@@ -11,26 +11,23 @@ dotenv.config();
 const app = express();
 
 // Middleware
+// server.js
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "https://crm-green-eta.vercel.app",
-      "https://*.vercel.app",
-      process.env.FRONTEND_URL,
+      "http://localhost:5173", // For local development
+      "https://crm-green-eta.vercel.app", // Deployed frontend URL
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
+    credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
 
 // Add CORS headers to all responses
+// Add CORS headers to all responses
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", "https://crm-green-eta.vercel.app"); // Replace '*' with the frontend URL
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, PATCH, OPTIONS"
@@ -39,6 +36,7 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
+  res.header("Access-Control-Allow-Credentials", "true"); // Allow credentials
   next();
 });
 
