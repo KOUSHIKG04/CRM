@@ -1,15 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
-
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS",
-  },
-});
+import axios from "../utils/axios";
 
 const AuthContext = createContext(null);
 
@@ -22,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const userData = JSON.parse(localStorage.getItem("user"));
       setUser(userData);
     }
@@ -31,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post("/auth/login", {
+      const response = await axios.post("/auth/login", {
         email,
         password,
       });
@@ -39,7 +29,7 @@ export const AuthProvider = ({ children }) => {
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       setUser(user);
       return { success: true, user };
     } catch (error) {
@@ -52,11 +42,11 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await api.post("/auth/register", userData);
+      const response = await axios.post("/auth/register", userData);
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       setUser(user);
       return { success: true, user };
     } catch (error) {
@@ -72,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    delete api.defaults.headers.common["Authorization"];
+    delete axios.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
@@ -82,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     loading,
-    axiosInstance: api,
+    axiosInstance: axios,
   };
 
   return (
