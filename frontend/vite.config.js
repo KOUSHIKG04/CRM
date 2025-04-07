@@ -1,25 +1,22 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  css: {
-    postcss: "./postcss.config.js",
-  },
   server: {
-    port: 3000,
+    port: 5173,
     proxy: {
       "/api": {
-        target: "https://crm-backend-1.onrender.com",
+        target: "http://localhost:5000",
         changeOrigin: true,
-        secure: false,
       },
     },
   },
@@ -33,9 +30,6 @@ export default defineConfig({
           vendor: ["react", "react-dom", "react-router-dom"],
         },
       },
-    },
-    commonjsOptions: {
-      include: [/node_modules/],
     },
   },
 });

@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -28,6 +27,7 @@
     "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "crm-frontend": "file:",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.487.0",
     "react": "^18.2.0",
@@ -38,15 +38,16 @@
     "react-hot-toast": "^2.5.2",
     "react-router-dom": "^6.15.0",
     "tailwind-merge": "^3.1.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tw-animate-css": "^1.2.5"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
-    "@tailwindcss/postcss": "^4.0.0",
-    "vite": "^5.1.0"
+    "@tailwindcss/vite": "^4.1.3",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^4.0.4",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.3",
+    "vite": "^5.4.17"
   },
   "eslintConfig": {
     "extends": [
@@ -65,8 +66,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
