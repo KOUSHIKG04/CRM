@@ -43,9 +43,9 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Routes
-app.use("/auth", authRoutes);
-app.use("/leads", leadRoutes);
-app.use("/users", userRoutes);
+app.use("api/auth", authRoutes);
+app.use("api/leads", leadRoutes);
+app.use("api/users", userRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
