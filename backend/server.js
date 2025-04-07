@@ -11,23 +11,32 @@ dotenv.config();
 const app = express();
 
 // Middleware
-// server.js
 app.use(
   cors({
     origin: [
       "http://localhost:5173", // For local development
-      "https://crm-green-eta.vercel.app", // Deployed frontend URL
+      "https://crm-plum-theta.vercel.app", // New frontend URL
+      process.env.FRONTEND_URL,
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    credentials: true, // Allow credentials (cookies, authorization headers)
+    credentials: true,
   })
 );
 
 // Add CORS headers to all responses
-// Add CORS headers to all responses
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://crm-green-eta.vercel.app"); // Replace '*' with the frontend URL
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://crm-plum-theta.vercel.app",
+    process.env.FRONTEND_URL,
+  ];
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, PATCH, OPTIONS"
@@ -36,7 +45,7 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
-  res.header("Access-Control-Allow-Credentials", "true"); // Allow credentials
+  res.header("Access-Control-Allow-Credentials", "true");
   next();
 });
 
