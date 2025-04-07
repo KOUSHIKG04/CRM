@@ -1,19 +1,19 @@
 import axios from "../utils/axios";
 
 export const getLeads = async () => {
-  const response = await axios.get("/api/leads");
+  const response = await axios.get("/leads");
   return response.data;
 };
 
 export const addLead = async (leadData) => {
-  const response = await axios.post("/api/leads", leadData);
+  const response = await axios.post("/leads", leadData);
   return response.data;
 };
 
 export const updateLead = async (id, leadData) => {
   try {
     console.log("Updating lead with data:", leadData);
-    const response = await axios.patch(`/api/leads/${id}`, leadData);
+    const response = await axios.patch(`/leads/${id}`, leadData);
     console.log("Update response:", response.data);
     return response.data;
   } catch (error) {
@@ -23,19 +23,19 @@ export const updateLead = async (id, leadData) => {
 };
 
 export const deleteLead = async (leadId) => {
-  const response = await axios.delete(`/api/leads/${leadId}`);
+  const response = await axios.delete(`/leads/${leadId}`);
   return response.data;
 };
 
 export const updateCallResponse = async (leadId, callData) => {
   const response = await axios.patch(
-    `/api/leads/${leadId}/call-response`,
+    `/leads/${leadId}/call-response`,
     callData
   );
   return response.data;
 };
 
 export const getLeadStats = async () => {
-  const response = await axios.get("/api/leads/stats");
+  const response = await axios.get("/leads/stats");
   return response.data;
 };
