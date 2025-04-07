@@ -10,6 +10,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  css: {
+    postcss: "./postcss.config.js",
+  },
   server: {
     port: 3000,
     proxy: {
@@ -30,6 +33,9 @@ export default defineConfig({
           vendor: ["react", "react-dom", "react-router-dom"],
         },
       },
+    },
+    commonjsOptions: {
+      include: [/node_modules/],
     },
   },
 });
