@@ -180,7 +180,7 @@ const getConnectedLeads = async (req, res) => {
 
 const updateCallResponseForLead = async (req, res) => {
   try {
-    const { callResponse, callNotes, nextCallDate } = req.body;
+    const { callResponse, callNotes, nextCallDate, isConnected } = req.body;
     const lead = await Lead.findById(req.params.id);
 
     if (!lead) {
@@ -199,22 +199,25 @@ const updateCallResponseForLead = async (req, res) => {
     lead.lastCallDate = new Date();
     lead.nextCallDate = nextCallDate || null;
 
-    // Update status based on call response
-    switch (callResponse) {
-      case "interested":
-        lead.status = "interested";
-        break;
-      case "callback":
-        lead.status = "callback";
-        break;
-      case "discussed":
-        lead.status = "contacted";
-        break;
-      case "busy":
-      case "rnr":
-      case "switched_off":
-        lead.status = "pending";
-        break;
+    // Update status based on connection status and response
+    if (isConnected) {
+      switch (callResponse) {
+        case "discussed":
+        case "interested":
+          lead.status = "contacted";
+          break;
+        case "callback":
+          lead.status = "callback";
+          break;
+      }
+    } else {
+      switch (callResponse) {
+        case "busy":
+        case "rnr":
+        case "switched_off":
+          lead.status = "pending";
+          break;
+      }
     }
 
     await lead.save();

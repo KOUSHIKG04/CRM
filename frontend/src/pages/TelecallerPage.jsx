@@ -62,6 +62,7 @@ const TelecallerPage = () => {
   const [callResponse, setCallResponse] = useState("");
   const [callNotes, setCallNotes] = useState("");
   const [nextCallDate, setNextCallDate] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     fetchLeads();
@@ -200,6 +201,7 @@ const TelecallerPage = () => {
           callResponse,
           callNotes,
           nextCallDate,
+          isConnected,
         }
       );
 
@@ -223,6 +225,7 @@ const TelecallerPage = () => {
     setCallNotes("");
     setNextCallDate(null);
     setSelectedLead(null);
+    setIsConnected(false);
   };
 
   if (loading) {
@@ -393,19 +396,45 @@ const TelecallerPage = () => {
             <DialogTitle>UPDATE CALL</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 p-3">
+            <div className="flex gap-4">
+              <Button
+                variant={isConnected ? "default" : "outline"}
+                onClick={() => setIsConnected(true)}
+                className="flex-1"
+              >
+                CONNECTED
+              </Button>
+              <Button
+                variant={!isConnected ? "default" : "outline"}
+                onClick={() => setIsConnected(false)}
+                className="flex-1"
+              >
+                NOT CONNECTED
+              </Button>
+            </div>
+
             <Label>CALL RESPONSE</Label>
             <Select value={callResponse} onValueChange={setCallResponse}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Response" />
               </SelectTrigger>
               <SelectContent>
-                {CALL_RESPONSES.map((response) => (
-                  <SelectItem key={response.value} value={response.value}>
-                    {response.label}
-                  </SelectItem>
-                ))}
+                {isConnected ? (
+                  <>
+                    <SelectItem value="discussed">DISCUSSED</SelectItem>
+                    <SelectItem value="callback">CALL BACK</SelectItem>
+                    <SelectItem value="interested">INTERESTED</SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="busy">BUSY</SelectItem>
+                    <SelectItem value="rnr">RINGING NO RESPONSE</SelectItem>
+                    <SelectItem value="switched_off">SWITCHED OFF</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
+
             <div>
               <Label className={"mb-2"}>CALL NOTES</Label>
               <Textarea
