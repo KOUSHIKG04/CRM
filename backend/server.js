@@ -4,7 +4,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth");
 const leadRoutes = require("./routes/leads");
-const userRoutes = require("./routes/users");
+// const userRoutes = require("./routes/users");
 
 dotenv.config();
 
