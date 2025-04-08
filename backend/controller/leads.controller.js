@@ -4,7 +4,13 @@ const { validationResult } = require("express-validator");
 
 const getLeads = async (req, res) => {
   try {
-    const leads = await Lead.find()
+    let query = {};
+    // If user is a telecaller, only show their leads
+    if (req.user.role === "telecaller") {
+      query.assignedTo = req.user.userId;
+    }
+
+    const leads = await Lead.find(query)
       .sort({ createdAt: -1 })
       .populate("assignedTo", "name email");
     res.json(leads);
@@ -45,87 +51,56 @@ const createLead = async (req, res) => {
 
 const updateLead = async (req, res) => {
   try {
-    const lead = await Lead.findById(req.params.id).populate(
-      "assignedTo",
-      "name email"
-    );
-
+    const lead = await Lead.findById(req.params.id);
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
 
-    let updateData = {};
-
-    const {
-      name,
-      email,
-      phone,
-      address,
-      status,
-      callResponse,
-      callNotes,
-      nextCallDate,
-    } = req.body;
-
-    if (req.user.role === "telecaller") {
-      updateData = {
-        name: name || lead.name,
-        email: email || lead.email,
-        phone: phone || lead.phone,
-        address: address || lead.address,
-        status: status || lead.status,
-        callResponse: callResponse,
-        callNotes: callNotes,
-        nextCallDate: nextCallDate,
-        lastCallDate: new Date(),
-      };
-    } else {
-      updateData = {
-        ...req.body,
-        lastCallDate: new Date(),
-      };
+    // Check if user is telecaller and the lead is assigned to them
+    if (
+      req.user.role === "telecaller" &&
+      lead.assignedTo.toString() !== req.user.userId
+    ) {
+      return res.status(403).json({
+        message: "Access denied: You can only edit leads assigned to you",
+      });
     }
 
     const updatedLead = await Lead.findByIdAndUpdate(
       req.params.id,
-      { $set: updateData },
+      { $set: req.body },
       { new: true }
     ).populate("assignedTo", "name email");
 
     res.json(updatedLead);
   } catch (err) {
     console.error("Error updating lead:", err);
-    res.status(500).json({ message: err.message || "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 const deleteLead = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
-
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
 
-    // If user is a telecaller, only allow deleting their own leads
+    // Check if user is telecaller and the lead is assigned to them
     if (
       req.user.role === "telecaller" &&
-      lead.assignedTo.toString() !== req.user.userId.toString()
+      lead.assignedTo.toString() !== req.user.userId
     ) {
       return res.status(403).json({
-        message: "Not authorized to delete this lead",
-        details: {
-          userId: req.user.userId,
-          assignedTo: lead.assignedTo,
-        },
+        message: "Access denied: You can only delete leads assigned to you",
       });
     }
 
-    await lead.deleteOne();
-    res.json({ message: "Lead removed" });
+    await Lead.findByIdAndDelete(req.params.id);
+    res.json({ message: "Lead deleted successfully" });
   } catch (err) {
     console.error("Error deleting lead:", err);
-    res.status(500).json({ message: err.message || "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -145,12 +120,16 @@ const updateLeadStatus = async (req, res) => {
 
     // Only assigned telecaller or admin can update status
     if (
-      req.user.role !== "admin" &&
-      lead.assignedTo.toString() !== req.user.userId
+      req.user.role === "telecaller" &&
+      lead.assignedTo.toString() !== req.user.userId.toString()
     ) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to update this lead" });
+      return res.status(403).json({
+        message: "Not authorized to update this lead",
+        details: {
+          userId: req.user.userId,
+          assignedTo: lead.assignedTo,
+        },
+      });
     }
 
     lead.status = status;
@@ -178,80 +157,73 @@ const getConnectedLeads = async (req, res) => {
   }
 };
 
-const updateCallResponseForLead = async (req, res) => {
+const updateCallResponse = async (req, res) => {
   try {
-    const { callResponse, callNotes, nextCallDate, isConnected } = req.body;
     const lead = await Lead.findById(req.params.id);
-
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
 
-    // Only assigned telecaller or admin can update call response
-    if (req.user.role !== "admin" && req.user.role !== "telecaller") {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to update this lead" });
+    // Check if user is telecaller and the lead is assigned to them
+    if (
+      req.user.role === "telecaller" &&
+      lead.assignedTo.toString() !== req.user.userId
+    ) {
+      return res.status(403).json({
+        message:
+          "Access denied: You can only update calls for leads assigned to you",
+      });
     }
 
-    lead.callResponse = callResponse;
-    lead.callNotes = callNotes;
-    lead.lastCallDate = new Date();
-    lead.nextCallDate = nextCallDate || null;
+    const { callResponse, callNotes, nextCallDate, isConnected } = req.body;
 
-    // Update status based on connection status and response
-    if (isConnected) {
-      switch (callResponse) {
-        case "discussed":
-        case "interested":
-          lead.status = "contacted";
-          break;
-        case "callback":
-          lead.status = "callback";
-          break;
-      }
-    } else {
-      switch (callResponse) {
-        case "busy":
-        case "rnr":
-        case "switched_off":
-          lead.status = "pending";
-          break;
-      }
-    }
+    const updatedLead = await Lead.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          callResponse,
+          callNotes,
+          nextCallDate,
+          lastCallDate: new Date(),
+          isConnected,
+          status: isConnected ? "contacted" : "pending",
+        },
+      },
+      { new: true }
+    ).populate("assignedTo", "name email");
 
-    await lead.save();
-    await lead.populate("assignedTo", "name email");
-
-    res.json(lead);
+    res.json(updatedLead);
   } catch (err) {
     console.error("Error updating call response:", err);
-    res.status(500).json({ message: err.message || "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 const getLeadStatus = async (req, res) => {
   try {
-    const totalLeads = await Lead.countDocuments();
-    const totalTelecallers = await User.countDocuments({ role: "telecaller" });
-    const totalCalls = await Lead.countDocuments({
-      lastCallDate: { $ne: null },
-    });
-
-    // Get total contacted customers (unique leads with status 'contacted' or 'interested')
-    const totalContacted = await Lead.countDocuments({
-      status: { $in: ["contacted", "interested"] },
-    });
-
-    const statusCounts = await Lead.aggregate([
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
+    // Basic counts
+    const [totalLeads, totalTelecallers, totalCalls] = await Promise.all([
+      Lead.countDocuments(),
+      User.countDocuments({ role: "telecaller" }),
+      Lead.countDocuments({ lastCallDate: { $ne: null } }),
     ]);
 
+    // Status counts
+    const [totalContacted, statusCounts] = await Promise.all([
+      Lead.countDocuments({
+        status: { $in: ["contacted", "interested"] },
+      }),
+      Lead.aggregate([
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    // Call response counts
     const callResponseCounts = await Lead.aggregate([
       {
         $match: {
@@ -266,7 +238,7 @@ const getLeadStatus = async (req, res) => {
       },
     ]);
 
-    // Get call trends for the past 7 days
+    // Call trends for last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -289,7 +261,7 @@ const getLeadStatus = async (req, res) => {
       },
     ]);
 
-    // Get recent activity (last 10 calls)
+    // Recent activity
     const recentActivity = await Lead.find({
       lastCallDate: { $ne: null },
     })
@@ -297,15 +269,24 @@ const getLeadStatus = async (req, res) => {
       .limit(10)
       .populate("assignedTo", "name email");
 
+    // Return all statistics in a single response
     res.json({
+      // Basic metrics
       totalLeads,
       totalTelecallers,
       totalCalls,
       totalContacted,
+
+      // Detailed metrics
       statusCounts,
       callResponseCounts,
       callTrends,
       recentActivity,
+
+      // Additional metrics that might be useful
+      connectedCalls: await Lead.countDocuments({ status: "connected" }),
+      pendingCalls: await Lead.countDocuments({ status: "pending" }),
+      callbackCalls: await Lead.countDocuments({ status: "callback" }),
     });
   } catch (err) {
     console.error("Error fetching lead statistics:", err);
@@ -320,6 +301,6 @@ module.exports = {
   deleteLead,
   getConnectedLeads,
   updateLeadStatus,
-  updateCallResponseForLead,
+  updateCallResponse,
   getLeadStatus,
 };

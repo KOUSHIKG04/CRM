@@ -16,10 +16,6 @@ instance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Ensure we're not adding an extra /api prefix
-    if (config.url && config.url.startsWith("/api")) {
-      config.url = config.url.replace("/api", "");
-    }
     return config;
   },
   (error) => {

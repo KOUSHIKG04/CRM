@@ -47,7 +47,6 @@ const TelecallerPage = () => {
   const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState({ type: null, open: false });
   const [selectedLead, setSelectedLead] = useState(null);
-  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -63,6 +62,7 @@ const TelecallerPage = () => {
   const [callNotes, setCallNotes] = useState("");
   const [nextCallDate, setNextCallDate] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchLeads();
@@ -71,7 +71,11 @@ const TelecallerPage = () => {
   const fetchLeads = async () => {
     try {
       const data = await leadService.getLeads();
-      setLeads(data);
+      // Filter leads to only show those assigned to the current telecaller
+      const filteredLeads = data.filter(
+        (lead) => lead.assignedTo?._id === user.id
+      );
+      setLeads(filteredLeads);
     } catch (err) {
       toast.error(err.message || "Failed to fetch leads");
     } finally {
@@ -80,6 +84,12 @@ const TelecallerPage = () => {
   };
 
   const openDialog = (type, lead = null) => {
+    // Only allow editing leads assigned to the current telecaller
+    if (lead && lead.assignedTo?._id !== user.id) {
+      toast.error("You can only edit leads assigned to you");
+      return;
+    }
+
     setSelectedLead(lead);
     if (lead) {
       setFormData({
@@ -124,14 +134,8 @@ const TelecallerPage = () => {
   const handleSave = async () => {
     try {
       const dataToSend = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        status: formData.status,
-        callResponse: formData.callResponse || null,
-        callNotes: formData.callNotes || "",
-        nextCallDate: formData.nextCallDate || null,
+        ...formData,
+        assignedTo: user.id, // Ensure the lead is assigned to the current telecaller
       };
 
       let updatedLead;
@@ -140,51 +144,51 @@ const TelecallerPage = () => {
         setLeads((prevLeads) => [updatedLead, ...prevLeads]);
         toast.success("Lead added successfully");
       } else if (dialog.type === "edit") {
-        console.log("Sending update with data:", dataToSend);
+        if (selectedLead.assignedTo?._id !== user.id) {
+          toast.error("You can only edit leads assigned to you");
+          return;
+        }
         updatedLead = await leadService.updateLead(
           selectedLead._id,
           dataToSend
         );
-        console.log("Received updated lead:", updatedLead);
-
         setLeads((prevLeads) =>
           prevLeads.map((lead) =>
             lead._id === updatedLead._id ? updatedLead : lead
           )
         );
         toast.success("Lead updated successfully");
-      } else if (dialog.type === "status") {
-        updatedLead = await leadService.updateLead(selectedLead._id, {
-          status: formData.status,
-        });
-        setLeads((prevLeads) =>
-          prevLeads.map((lead) =>
-            lead._id === updatedLead._id ? updatedLead : lead
-          )
-        );
-        toast.success("Status updated successfully");
       }
       closeDialog();
     } catch (err) {
-      console.error("Error saving lead:", err);
-      toast.error(
-        err.response?.data?.message || err.message || "Failed to save lead"
-      );
+      toast.error(err.response?.data?.message || "Failed to save lead");
     }
   };
 
   const handleDelete = async (id) => {
+    const lead = leads.find((l) => l._id === id);
+    if (lead.assignedTo?._id !== user.id) {
+      toast.error("You can only delete leads assigned to you");
+      return;
+    }
+
     if (confirm("Are you sure you want to delete this lead?")) {
       try {
         await leadService.deleteLead(id);
-        fetchLeads();
+        setLeads((prevLeads) => prevLeads.filter((lead) => lead._id !== id));
+        toast.success("Lead deleted successfully");
       } catch (err) {
-        toast.error(err.message || "Failed to delete lead");
+        toast.error(err.response?.data?.message || "Failed to delete lead");
       }
     }
   };
 
   const handleCallClick = (lead) => {
+    if (lead.assignedTo?._id !== user.id) {
+      toast.error("You can only update calls for leads assigned to you");
+      return;
+    }
+
     setSelectedLead(lead);
     setCallResponse("");
     setCallNotes("");
@@ -194,6 +198,11 @@ const TelecallerPage = () => {
 
   const handleCallSubmit = async () => {
     try {
+      if (selectedLead.assignedTo?._id !== user.id) {
+        toast.error("You can only update calls for leads assigned to you");
+        return;
+      }
+
       const updatedLead = await leadService.updateCallResponse(
         selectedLead._id,
         {
@@ -214,8 +223,9 @@ const TelecallerPage = () => {
       setCallDialog(false);
       clearCallForm();
     } catch (error) {
-      console.error("Error updating call response:", error);
-      toast.error("Failed to update call response");
+      toast.error(
+        error.response?.data?.message || "Failed to update call response"
+      );
     }
   };
 
@@ -230,11 +240,7 @@ const TelecallerPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="flex-col gap-4 w-full flex items-center justify-center">
-          <div className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full">
-            <div className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"></div>
-          </div>
-        </div>
+        <div className="w-20 h-20 border-4 border-transparent text-blue-400 animate-spin border-t-blue-400 rounded-full" />
       </div>
     );
   }
@@ -242,7 +248,7 @@ const TelecallerPage = () => {
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold p-2">LEAD MANAGEMENT</h1>
+        <h1 className="text-2xl font-bold">MY LEADS</h1>
         <Button onClick={() => openDialog("add")} className="cursor-pointer">
           ADD LEAD
         </Button>
@@ -258,7 +264,6 @@ const TelecallerPage = () => {
               <TableHead>STATUS</TableHead>
               <TableHead>LAST CALL</TableHead>
               <TableHead>NEXT CALL</TableHead>
-              <TableHead>ASSIGNED TO</TableHead>
               <TableHead>ACTIONS</TableHead>
             </TableRow>
           </TableHeader>
@@ -279,12 +284,12 @@ const TelecallerPage = () => {
                     ? format(new Date(lead.nextCallDate), "PPp")
                     : "-"}
                 </TableCell>
-                <TableCell>{lead.assignedTo?.name || "-"}</TableCell>
                 <TableCell className="space-x-2">
                   <Button
                     size="sm"
                     onClick={() => handleCallClick(lead)}
                     className={"text-xs cursor-pointer"}
+                    disabled={lead.assignedTo?._id !== user.id}
                   >
                     UPDATE CALL
                   </Button>
@@ -293,6 +298,7 @@ const TelecallerPage = () => {
                     variant="outline"
                     onClick={() => openDialog("edit", lead)}
                     className={"text-xs cursor-pointer"}
+                    disabled={lead.assignedTo?._id !== user.id}
                   >
                     EDIT
                   </Button>
@@ -301,6 +307,7 @@ const TelecallerPage = () => {
                     variant="destructive"
                     onClick={() => handleDelete(lead._id)}
                     className={"text-xs cursor-pointer"}
+                    disabled={lead.assignedTo?._id !== user.id}
                   >
                     DELETE
                   </Button>

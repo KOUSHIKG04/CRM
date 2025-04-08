@@ -12,9 +12,8 @@ export const addLead = async (leadData) => {
 
 export const updateLead = async (id, leadData) => {
   try {
-    console.log("Updating lead with data:", leadData);
     const response = await axios.patch(`/leads/${id}`, leadData);
-    console.log("Update response:", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error updating lead:", error);
@@ -37,5 +36,17 @@ export const updateCallResponse = async (leadId, callData) => {
 
 export const getLeadStats = async () => {
   const response = await axios.get("/leads/stats");
+  return response.data;
+};
+
+export const getTelecallers = async () => {
+  const response = await axios.get("/users/telecallers");
+  return response.data;
+};
+
+export const getTelecallerActivities = async (telecallerId) => {
+  const response = await axios.get(
+    `/users/telecallers/${telecallerId}/activities`
+  );
   return response.data;
 };

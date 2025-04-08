@@ -2,8 +2,16 @@ const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
 const { auth, checkRole } = require("../middleware/auth");
-const { getLeads, getLeadStatus, updateLead, createLead, deleteLead, updateLeadStatus, getConnectedLeads, updateCallResponseForLead } = require("../controller/leads.controller");
- 
+const {
+  getLeads,
+  getLeadStatus,
+  updateLead,
+  createLead,
+  deleteLead,
+  updateLeadStatus,
+  getConnectedLeads,
+  updateCallResponse,
+} = require("../controller/leads.controller");
 
 // @route   GET api/leads // @access  Private (Telecaller & Admin)
 router.get("/", auth, checkRole(["admin", "telecaller"]), getLeads);
@@ -27,12 +35,7 @@ router.post(
 router.patch("/:id", auth, checkRole(["admin", "telecaller"]), updateLead);
 
 // @route   DELETE api/leads/:id // @desc    Delete a lead // @access  Private (Admin & Telecaller)
-router.delete(
-  "/:id",
-  auth,
-  checkRole(["admin", "telecaller"]),
-   deleteLead
-);
+router.delete("/:id", auth, checkRole(["admin", "telecaller"]), deleteLead);
 
 // @route   PATCH api/leads/:id/status // @desc    Update lead status // @access  Private (Telecaller & Admin)
 router.patch(
@@ -53,15 +56,15 @@ router.patch(
   updateLeadStatus
 );
 
-// @route   GET api/leads/connected // @desc    Get all connected leads // @access  Private (Admin only)
+// @route   GET api/leads/connected // @desc  Get all connected leads // @access  Private (Admin only)
 router.get("/connected", auth, checkRole(["admin"]), getConnectedLeads);
 
-// @route   PATCH api/leads/:id/call-response // @desc    Update call response for a lead // @access  Private (Telecaller & Admin)
+// @route   PATCH api/leads/:id/call-response // @desc  Update call response for a lead // @access  Private (Telecaller & Admin)
 router.patch(
   "/:id/call-response",
   auth,
   checkRole(["admin", "telecaller"]),
-  updateCallResponseForLead
+  updateCallResponse
 );
 
 // @route   GET api/leads/stats // @desc    Get lead statistics for admin // @access  Private (Admin only)
